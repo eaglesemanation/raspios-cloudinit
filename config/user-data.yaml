@@ -1,25 +1,22 @@
 #cloud-config
 
-## Create unique, but easy to remember name. Will be used later to connect to device
+---
 hostname: raspberry-0
 
 manage_etc_hosts: true
-timezone: Europe/Moscow
+timezone: America/Toronto
 ssh_pwauth: false
 
 users:
   ## Include "default" if you want default pi:raspberry user
-  #- default
+  # - default
   - name: ansible
     gecos: Ansible provisioning user
     groups: sudo
     sudo: "ALL=(ALL) NOPASSWD:ALL"
-    lock_passwd: true
     shell: /bin/bash
-    ## Generate this string with `mkpasswd`
-    passwd: $y$j9T$z6zzQNVPR6ODbCdBBqx7l.$SS0QhFT.5X8mnN5KfTm8FW9/I1R.oW0USXFWK6zX55C
-    ssh_authorized_keys:
-      ## eaglesemanation@gmail.com SSH public key
-      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDihn0BFSzqwXFZOCLc8Gjuy7Od+b93CsxsomgLuCgd6PWEnVq/I4aPyzhLu/N/PDWDxwIhl1UkahISPZkuV2wkF1WuwBDQyEWek66abLnfCg0F2wTh9AKPuhpKlxtSsVZQ5o83NJ3c6N3lF4EiWG71eIb2/ZH6ZG5HtGnqjbduNZHd97fuxH/E5yCVHhHMk6GLx3jI/NstaKpb6ln6onOALwbPLgUJiGudrqK+xYLQRIjaJCYr2z75ntIfSYMPYMRobkyL9XnMcZhFsuvfVZ70uhkjwNQKh+TFPOuHAmmEXHRXjMXyK2dMvazAkAzi64VcroCNeqFnpTHiexLxVCuV openpgp:0x651B8C24
-      ## Check if ~/.ssh/id_ed25519.pub exists. If it does - add it here, otherwise - generate SSH key with `ssh-keygen -t ed25519 -a 100`
-      #- ssh-ed25519 ...
+    ## Disable lock_passwd if you want to use this
+    # passwd: ThisIsntStrongPassword
+    lock_passwd: true
+    # ssh_authorized_keys:
+    #   - ssh-ed25519 ...

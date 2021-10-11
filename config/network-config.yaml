@@ -1,3 +1,4 @@
+---
 network:
   version: 2
 
@@ -7,27 +8,27 @@ network:
       dhcp4: true
       dhcp6: true
 
-  ## Static IP
-  #ethernets:
-  #  eth0:
-  #    dhcp4: false
-  #    dhcp6: false
-  #    addresses:
-  #      - 10.50.100.100/24
-  #    gateway: 10.50.100.1
-  #    nameservers:
-  #      search:
-  #        - home
-  #      addresses:
-  #        - 8.8.8.8
-  #        - 8.8.4.4
+## Static IP
+#  ethernets:
+#    eth0:
+#      dhcp4: false
+#      dhcp6: false
+#      addresses:
+#        - 10.50.100.100/24
+#      gateway: 10.50.100.1
+#      nameservers:
+#        search:
+#          - home
+#        addresses:
+#          - 8.8.8.8
+#          - 8.8.4.4
 
-  ## WiFi
-  #wifis:
-  #  wlan0:
-  #    optional: true
-  #    dhcp4: true
-  #    dhcp6: true
-  #    access-points:
-  #      "WIFI NAME":
-  #        password: "WIFI PASSWORD"
+## WiFi
+#  wifis:
+#    wlan0:
+#      optional: true
+#      dhcp4: true
+#      dhcp6: true
+#      access-points:
+#        "WIFI NAME":
+#          password: "WIFI PASSWORD"
