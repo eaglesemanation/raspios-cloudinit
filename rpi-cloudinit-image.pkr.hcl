@@ -59,6 +59,25 @@ build {
     destination = "/etc/systemd/resolved.conf"
   }
 
+  # Configures systemd to keep network devices names
+  provisioner "file" {
+    source      = "templates/99-keep-names.link"
+    destination = "/etc/systemd/network/99-keep-names.link"
+  }
+
+  # Made systemd-networkd dependant on WPA config. In case of only WiFi
+  # being configured, boot will not hang on systemd-networkd-wait-online
+  provisioner "shell" {
+    inline = ["mkdir -p /etc/systemd/system/netplan-wpa@.service.d/"]
+  }
+  provisioner "file" {
+    source      = "templates/netplan-wpa-override.conf"
+    destination = "/etc/systemd/system/netplan-wpa@.service.d/override.conf"
+  }
+  provisioner "shell" {
+    inline = ["chmod 644 /etc/systemd/system/netplan-wpa@.service.d/override.conf"]
+  }
+
   # Configures cloud-init to search for configs in /boot
   provisioner "file" {
     source      = "templates/cloud.cfg"
@@ -93,7 +112,7 @@ build {
 
   provisioner "file" {
     source      = "config/network-config.yaml"
-    destination = "/etc/netplan/network-config.yaml"
+    destination = "/boot/network-config"
   }
 
 }
