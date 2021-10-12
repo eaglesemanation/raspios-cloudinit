@@ -42,8 +42,8 @@ build {
   provisioner "shell" {
     inline = [
       # Deletes default debian networking stack
-      "apt-get --autoremove purge -y ifupdown dhcpcd dhcpcd5 isc-dhcp-client isc-dhcp-common rsyslog avahi-daemon",
-      "apt-mark hold avahi-daemon dhcpcd dhcpcd5 ifupdown isc-dhcp-client isc-dhcp-common libnss-mdns openresolv raspberrypi-net-mods rsyslog",
+      "apt-get --autoremove purge -y ifupdown %{ if var.arch == "armhf" } dhcpcd %{ endif } dhcpcd5 isc-dhcp-client isc-dhcp-common rsyslog avahi-daemon",
+      "apt-mark hold avahi-daemon %{ if var.arch == "armhf" } dhcpcd %{ endif } dhcpcd5 ifupdown isc-dhcp-client isc-dhcp-common libnss-mdns openresolv raspberrypi-net-mods rsyslog",
       "rm -r /etc/network /etc/dhcp",
       # Configures systemd-networkd based networking
       "apt-get install -y libnss-resolve cloud-init netplan.io",
