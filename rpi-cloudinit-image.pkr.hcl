@@ -38,17 +38,14 @@ build {
     ]
   }
 
-  # Replace Debian network management with systemd-networkd + netplan
+  # Replace Debian network management with netplan + NetworkManager + systemd-resolved
   provisioner "shell" {
     inline = [
-      # Deletes default debian networking stack
-      "apt-get --autoremove purge -y ifupdown %{ if var.arch == "armhf" } dhcpcd %{ endif } dhcpcd5 isc-dhcp-client isc-dhcp-common rsyslog avahi-daemon",
-      "apt-mark hold avahi-daemon %{ if var.arch == "armhf" } dhcpcd %{ endif } dhcpcd5 ifupdown isc-dhcp-client isc-dhcp-common libnss-mdns openresolv raspberrypi-net-mods rsyslog",
-      "rm -r /etc/network /etc/dhcp",
-      # Configures systemd-networkd based networking
-      "apt-get install -y libnss-resolve cloud-init netplan.io",
+      "apt-get --autoremove purge -y %{ if var.arch == "armhf" } dhcpcd %{ endif } dhcpcd5",
+      "apt-mark hold avahi-daemon %{ if var.arch == "armhf" } dhcpcd %{ endif } dhcpcd5 openresolv",
+      "apt-get install -y cloud-init netplan.io network-manager",
       "ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf",
-      "systemctl enable systemd-networkd.service systemd-resolved.service"
+      "systemctl enable NetworkManager.service systemd-resolved.service systemd-networkd.service"
     ]
   }
 
@@ -65,17 +62,23 @@ build {
     destination = "/etc/systemd/network/99-keep-names.link"
   }
 
-  # Made systemd-networkd dependant on WPA config. In case of only WiFi
-  # being configured, boot will not hang on systemd-networkd-wait-online
+  # Configure NetworkManager to search for connection files in /run instead of /etc
+  # because netplan decided to do so
+  provisioner "file" {
+    source      = "templates/NetworkManager.conf"
+    destination = "/etc/NetworkManager/NetworkManager.conf"
+  }
+
+  # Makes systemd-networkd wait for NetworkManager to initialize
   provisioner "shell" {
-    inline = ["mkdir -p /etc/systemd/system/netplan-wpa@.service.d/"]
+    inline = ["mkdir -p /etc/systemd/system/NetworkManager.service.d/"]
   }
   provisioner "file" {
-    source      = "templates/netplan-wpa-override.conf"
-    destination = "/etc/systemd/system/netplan-wpa@.service.d/override.conf"
+    source      = "templates/NetworkManager-service-override.conf"
+    destination = "/etc/systemd/system/NetworkManager.service.d/override.conf"
   }
   provisioner "shell" {
-    inline = ["chmod 644 /etc/systemd/system/netplan-wpa@.service.d/override.conf"]
+    inline = ["chmod 644 /etc/systemd/system/NetworkManager.service.d/override.conf"]
   }
 
   # Configures cloud-init to search for configs in /boot

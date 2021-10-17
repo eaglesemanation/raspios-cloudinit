@@ -1,6 +1,8 @@
 ---
 version: 2
 
+renderer: NetworkManager
+
 ethernets:
   eth0:
     optional: true
@@ -25,9 +27,16 @@ ethernets:
 ## WiFi
 #wifis:
 #  wlan0:
-#    optional: true
 #    dhcp4: true
 #    dhcp6: true
 #    access-points:
-#      "WIFI NAME":
-#        password: "WIFI PASSWORD"
+#      "SSID":
+#        password: "PASSWORD"
+
+## WiFi AP
+#wifis:
+#  wlan0:
+#    access-points:
+#      "SSID":
+#        mode: ap
+#        password: "PASSWORD"
