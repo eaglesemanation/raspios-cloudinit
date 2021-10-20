@@ -1,7 +1,7 @@
 TOP := $(dir $(firstword $(MAKEFILE_LIST)))
 
 CONTAINER_CLI  ?= docker
-BUILDER_IMAGE  ?= quay.io/solo-io/packer-builder-arm-image:v0.1.6
+BUILDER_IMAGE  ?= ghcr.io/solo-io/packer-plugin-arm-image/packer-builder-arm:v0.2.1
 BUILDER_CONFIG ?= $(TOP)/rpi-cloudinit-image.pkr.hcl
 
 CACHE_DIR  ?= $(TOP)/cache
@@ -25,6 +25,7 @@ img:	## Builds modified image. Add IMAGE_ARCH=arm64 to build 64 bit version
 	$(CONTAINER_CLI) run \
 		--rm -it \
 		--privileged \
+		-v /dev:/dev \
 		-v $(BUILDER_CONFIG):/build/packer-config.pkr.hcl:ro \
 		-v $(TOP)/config:/build/config:ro \
 		-v $(TOP)/templates:/build/templates:ro \

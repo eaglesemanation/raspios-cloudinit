@@ -9,13 +9,14 @@ Packer configuration for building RaspiOS Lite image with Cloud-Init and Netplan
 
 #### Fedora
 
-Run `sudo dnf install make podman podman-docker`
+Run `sudo dnf install make podman podman-docker qemu-user-static`
 
 #### Other
 
 You are on your own, open PR if you want to add support for other platform
 - `docker` or `podman`
 - `make`
+- `qemu-user-static`
 
 
 ### Build
