@@ -1,0 +1,9 @@
+---
+- name: Link resolv.conf to systemd-resolved
+  ansible.builtin.file:
+    src: /run/systemd/resolve/stub-resolv.conf
+    dest: /etc/resolv.conf
+    force: true
+    follow: false
+    state: link
+  listen: "link resolved"

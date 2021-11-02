@@ -1,0 +1,9 @@
+---
+- name: "Provision Raspios image"
+  hosts: default
+
+  roles:
+    - common
+    - rpi_wifi
+    - netplan
+    - cloud-init

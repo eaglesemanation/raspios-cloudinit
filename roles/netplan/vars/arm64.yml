@@ -1,0 +1,4 @@
+---
+# Packages that should be removed to not collide with NetworkManager
+apt_remove_packages:
+  - dhcpcd5

@@ -1,0 +1,13 @@
+---
+- name: Disable rfkill
+  ansible.builtin.copy:
+    content: '0'
+    dest: "/var/lib/systemd/rfkill/platform-{{ item }}.mmcnr:wlan"
+  with_items:
+    - 3f300000
+    - fe300000
+
+- name: Configure wpa_supplicant for country regulation
+  ansible.builtin.lineinfile:
+    line: "country={{ wifi_country }}"
+    path: /etc/wpa_supplicant/wpa_supplicant.conf

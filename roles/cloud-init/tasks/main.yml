@@ -1,0 +1,24 @@
+---
+- name: Install cloud-init
+  ansible.builtin.apt:
+    name:
+      - cloud-init
+    state: latest
+
+- name: Copy configuration for cloud-init
+  ansible.builtin.copy:
+    src: files/cloud.cfg
+    dest: /etc/cloud/cloud.cfg
+
+- name: Copy configured user-data.yaml to /boot
+  ansible.builtin.copy:
+    src: "{{ user_data_path }}"
+    dest: /boot/user-data.yaml
+
+- name: Lint user-data.yaml
+  ansible.builtin.command: cloud-init devel schema --config-file /boot/user-data.yaml
+
+- name: Copy configured network-config.yaml to /boot
+  ansible.builtin.copy:
+    src: "{{ network_config_path }}"
+    dest: /boot/network-config.yaml

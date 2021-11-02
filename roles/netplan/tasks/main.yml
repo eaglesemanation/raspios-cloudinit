@@ -1,0 +1,80 @@
+---
+- name: Import arch dependent vars
+  ansible.builtin.include_vars:
+    file: "vars/{{ arch }}.yml"
+    name: arch_vars
+
+- name: Uninstall default Raspios networking
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ arch_vars.apt_remove_packages }}"
+
+- name: Hold default packages to prevent auto-install
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  with_items: "{{ arch_vars.apt_remove_packages }}"
+
+- name: Install netplan with dependencies
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - netplan.io
+    - network-manager
+
+- name: Make sure /etc/systemd/resolved.conf.d exists
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+- name: Add systemd-resolved overrides
+  ansible.builtin.copy:
+    src: files/resolved.conf
+    dest: /etc/systemd/resolved.conf.d/00-rpi-override.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+
+# Netplan fails if there is no .link file defined
+- name: Configure network devices naming
+  ansible.builtin.copy:
+    src: files/udevd-keep-names.link
+    dest: /etc/systemd/network/00-keep-names.link
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+
+# TODO: Figure out how to add 2 different paths for keyfile
+# plugin
+- name: Configure NetworkManager
+  ansible.builtin.copy:
+    src: files/NetworkManager.conf
+    dest: /etc/NetworkManager/NetworkManager.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+
+- name: Create folder for overriding systemd-networkd-wait-online exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/systemd-networkd-wait-online.service.d
+    state: directory
+- name: Make systemd-networkd-wait-online dependant on NetworkManager
+  ansible.builtin.copy:
+    src: files/wait-online-service-override.conf
+    dest: |-
+      /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+
+- name: Enable services required for netplan
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+  with_items:
+    - NetworkManager.service
+    - systemd-resolved.service
+    - systemd-networkd.service
+  notify: "link resolved"
