@@ -56,19 +56,6 @@
     mode: u=rw,g=r,o=r
     backup: true
 
-- name: Create folder for overriding systemd-networkd-wait-online exists
-  ansible.builtin.file:
-    path: /etc/systemd/system/systemd-networkd-wait-online.service.d
-    state: directory
-- name: Make systemd-networkd-wait-online dependant on NetworkManager
-  ansible.builtin.copy:
-    src: files/wait-online-service-override.conf
-    dest: |-
-      /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf
-    owner: root
-    group: root
-    mode: u=rw,g=r,o=r
-
 - name: Enable services required for netplan
   ansible.builtin.systemd:
     name: "{{ item }}"
@@ -76,5 +63,4 @@
   with_items:
     - NetworkManager.service
     - systemd-resolved.service
-    - systemd-networkd.service
   notify: "link resolved"
