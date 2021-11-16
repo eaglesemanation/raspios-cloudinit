@@ -3,3 +3,6 @@ wifi_country: CA
 
 user_data_path: "{{playbook_dir}}/config/user-data.yaml"
 network_config_path: "{{playbook_dir}}/config/network-config.yaml"
+
+# Enables service that reapplies /boot/network-config on each reboot
+netplan_config_regeneration: true

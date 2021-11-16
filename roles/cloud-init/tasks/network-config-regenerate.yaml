@@ -1,0 +1,16 @@
+---
+- name: Copy script that reapplies /boot/network-config
+  ansible.builtin.copy:
+    src: files/network-config-regenerate
+    dest: /usr/local/bin/network-config-regenerate
+    mode: u=rwx,g=rx,o=rx
+
+- name: Copy service file to run script on boot
+  ansible.builtin.copy:
+    src: files/network-config-regenerate.service
+    dest: /etc/systemd/system/network-config-regenerate.service
+
+- name: Enable regeneration service
+  ansible.builtin.systemd:
+    name: network-config-regenerate.service
+    enabled: true

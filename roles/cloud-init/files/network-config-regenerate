@@ -1,0 +1,5 @@
+#!/bin/sh
+
+awk 'BEGIN{print "network:"}; /^---$/{next}; {print "  "$0}' /boot/network-config > /etc/netplan/50-cloud-init.yaml
+
+netplan generate

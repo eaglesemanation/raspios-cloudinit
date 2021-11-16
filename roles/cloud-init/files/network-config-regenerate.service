@@ -1,0 +1,13 @@
+[Unit]
+Description=Reapply /boot/network-config to Netplan
+DefaultDependencies=no
+After=cloud-init-local.service
+Before=network-pre.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/network-config-regenerate
+
+[Install]
+WantedBy=cloud-init.target

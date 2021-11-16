@@ -22,3 +22,7 @@
   ansible.builtin.copy:
     src: "{{ network_config_path }}"
     dest: /boot/network-config.yaml
+
+- name: Enable Netplan config regeneration
+  ansible.builtin.include_tasks: network-config-regenerate.yaml
+  when: netplan_config_regeneration | bool
