@@ -10,18 +10,29 @@
     src: files/cloud.cfg
     dest: /etc/cloud/cloud.cfg
 
+- name: Delete default user to give cloud-init control over it
+  ansible.builtin.user:
+    name: pi
+    state: absent
+    remove: true
+
 - name: Copy configured user-data.yaml to /boot
   ansible.builtin.copy:
     src: "{{ user_data_path }}"
-    dest: /boot/user-data.yaml
+    dest: /boot/user-data
 
 - name: Lint user-data.yaml
-  ansible.builtin.command: cloud-init devel schema --config-file /boot/user-data.yaml
+  ansible.builtin.command: cloud-init devel schema --config-file /boot/user-data
 
 - name: Copy configured network-config.yaml to /boot
   ansible.builtin.copy:
     src: "{{ network_config_path }}"
-    dest: /boot/network-config.yaml
+    dest: /boot/network-config
+
+- name: Generate random instance-id
+  ansible.builtin.template:
+    src: files/meta-data.yaml.j2
+    dest: /boot/meta-data
 
 - name: Enable Netplan config regeneration
   ansible.builtin.include_tasks: network-config-regenerate.yaml

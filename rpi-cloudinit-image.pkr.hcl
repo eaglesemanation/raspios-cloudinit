@@ -52,20 +52,4 @@ build {
 
     playbook_file = "./site.yml"
   }
-
-  # Generates random instance-id
-  provisioner "shell" {
-    inline = [ "echo 'instance-id: ${uuidv4()}' > /boot/meta-data" ]
-  }
-
-  provisioner "file" {
-    source      = "config/user-data.yaml"
-    destination = "/boot/user-data"
-  }
-
-  provisioner "file" {
-    source      = "config/network-config.yaml"
-    destination = "/boot/network-config"
-  }
-
 }
