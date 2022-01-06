@@ -16,14 +16,15 @@ sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/fedora/has
 
 1. Install packer and ansible:
 ```bash
-sudo dnf install packer ansible
+sudo dnf install packer ansible-core ansible-collection-community-general
 ```
 
 #### Other
 
 You are on your own, open PR if you want to add support for other platform
 - `packer`
-- `ansible`
+- `ansible-core`
+- `ansible-collection-community-general`
 
 ### Build
 

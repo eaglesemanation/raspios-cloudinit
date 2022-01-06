@@ -14,6 +14,7 @@ help:	## Show this help.
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
 
 img:	## Builds modified image.
+	packer init .
 	packer build -var 'arch=$(ARCH)' .
 
 lsblk:	## List block devices with additional columns

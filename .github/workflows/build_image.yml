@@ -1,0 +1,91 @@
+---
+name: Fetch most recent version of RaspiOS Lite
+
+on:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: "CPU Architecture that is targeted "
+        required: true
+        type: choice
+        default: "armhf"
+        options:
+          - "armhf"
+          - "arm64"
+
+jobs:
+  compare_upstream:
+    runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.release_version.outputs.release_version }}
+      url: ${{ steps.url.outputs.url }}
+      sha256: ${{ steps.sha256.outputs.sha256 }}
+    env:
+      ARCH: ${{ github.event.inputs.arch }}
+    steps:
+      - name: Fetch latest build
+        id: release_version
+        run: |
+          curl "https://downloads.raspberrypi.org/raspios_lite_$ARCH/images/" 2>/dev/null | \
+          grep -Po "href=\"raspios_lite_$ARCH-\K.*(?=/\")" | \
+          sort -r | head -1 | \
+          xargs printf '::set-output name=release_version::%s\n'
+
+      - name: Fetch url for latest build
+        id: url
+        env:
+          RELEASE_VERSION: ${{ steps.release_version.outputs.release_version }}
+        run: |
+          export URL_PREFIX="https://downloads.raspberrypi.org/raspios_lite_$ARCH/images/raspios_lite_$ARCH-$RELEASE_VERSION/";
+          curl "$URL_PREFIX" 2>/dev/null | \
+          grep -Po "href=\"\K.*-raspios-.*-$ARCH-lite.zip(?=\")" | \
+          xargs printf "::set-output name=url::$URL_PREFIX%s\n"
+
+      - name: Fetch SHA256 checksum for current build
+        id: sha256
+        env:
+          RELEASE_VERSION: ${{ steps.release_version.outputs.release_version }}
+          URL: ${{ steps.url.outputs.url }}
+        run: |
+          curl "$URL.sha256" 2>/dev/null | \
+          cut -d' ' -f1 | xargs printf '::set-output name=sha256::%s\n'
+
+      - uses: actions/github-script@v5
+        env: 
+          RELEASE_VERSION: ${{ steps.release_version.outputs.release_version }}
+        with:
+          script: |
+            const query = `query($owner: String!, $name: String!){
+              repository(owner: $owner, name: $name) {
+                releases(first: 1, orderBy: {field: CREATED_AT, direction: DESC}) {
+                  nodes {
+                    tagName
+                  }
+                }
+              }
+            }`;
+            const result = await github.graphql(query, {
+              owner: context.repo.owner,
+              name: context.repo.repo,
+            });
+            const local_version = result.repository.releases.nodes?.[0]?.tagName ?? '1970-01-01';
+            if (new Date(process.env.RELEASE_VERSION) <= new Date(local_version)) {
+              core.setFailed('Local version is up to date, no need to rebuild')
+            };
+
+  build_image:
+    runs-on: ubuntu-latest
+    needs: compare_upstream
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Build Artifact
+        uses: hashicorp/packer-github-actions@v0.2.0
+        with:
+          command: build
+          arguments: >-
+            -var arch=${{ github.event.inputs.arch }}
+                 raspios_url=${{ needs.compare_upstream.outputs.url }}
+                 raspios_checksum=${{ needs.compare_upstream.outputs.sha256 }}
+          target: rpi-cloudinit-image.pkr.hcl

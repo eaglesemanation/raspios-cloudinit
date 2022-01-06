@@ -8,7 +8,7 @@ packer {
 }
 
 variable "arch" {
-  type    = string
+  type = string
 
   validation {
     condition     = can(regex("arm(hf|64)", var.arch))
@@ -16,14 +16,26 @@ variable "arch" {
   }
 }
 
+variable "raspios_url" {
+  type    = map(string)
+  default = {
+    armhf = "https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-11-08/2021-10-30-raspios-bullseye-armhf-lite.zip"
+    arm64 = "https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2021-11-08/2021-10-30-raspios-bullseye-arm64-lite.zip"
+  }
+}
+
+variable "raspios_checksum" {
+  type    = map(string)
+  default = {
+    armhf = "008d7377b8c8b853a6663448a3f7688ba98e2805949127a1d9e8859ff96ee1a9"
+    arm64 = "c88109027eac44b9ff37a7f3eb1873cdf6d7ca61a0264ec0e95870ca96afd242"
+  }
+}
+
 # Arch dependent base image
 locals {
-  raspios_checksum = lookup({
-    armhf = "sha256:c5dad159a2775c687e9281b1a0e586f7471690ae28f2f2282c90e7d59f64273c"
-    arm64 = "sha256:868cca691a75e4280c878eb6944d95e9789fa5f4bbce2c84060d4c39d057a042"
-  }, var.arch, "")
-
-  raspios_url = "https://downloads.raspberrypi.org/raspios_lite_${var.arch}/images/raspios_lite_${var.arch}-2021-05-28/2021-05-07-raspios-buster-${var.arch}-lite.zip"
+  image_url      = lookup(var.raspios_url, var.arch, "")
+  image_checksum = "sha256:${lookup(var.raspios_checksum, var.arch, "")}"
 
   qemu_binary = lookup({
     armhf = "qemu-arm-static"
@@ -35,8 +47,8 @@ locals {
 
 source "arm-image" "raspios-cloudinit" {
   target_image_size = 4294967296
-  iso_checksum      = local.raspios_checksum
-  iso_url           = local.raspios_url
+  iso_checksum      = local.image_checksum
+  iso_url           = local.image_url
   qemu_binary       = local.qemu_binary
   mount_path        = local.mount_path
 }
@@ -45,10 +57,11 @@ build {
   sources = ["arm-image.raspios-cloudinit"]
 
   provisioner "ansible" {
-    extra_arguments = [
+    extra_arguments  = [
       "--connection=chroot",
       "-e", "ansible_host='${ local.mount_path }' arch='${ var.arch }'"
     ]
+    ansible_env_vars = ["ANSIBLE_NOCOWS=1"]
 
     playbook_file = "./site.yml"
   }

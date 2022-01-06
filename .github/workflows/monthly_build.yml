@@ -1,0 +1,25 @@
+---
+name: Try to build new version of RaspiOS each month
+
+on:
+  schedule:
+    - cron: 0 12 1 * *
+
+jobs:
+  build_images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build armhf image
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          workflow: 17452665
+          inputs: '{"arch":"armhf"}'
+
+      - name: Build arm64 image
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          workflow: 17452665
+          inputs: '{"arch":"arm64"}'
+
