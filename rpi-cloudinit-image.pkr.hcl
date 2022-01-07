@@ -17,18 +17,28 @@ variable "arch" {
 }
 
 variable "raspios_url" {
-  type    = map(string)
-  default = {
-    armhf = "https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-11-08/2021-10-30-raspios-bullseye-armhf-lite.zip"
-    arm64 = "https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2021-11-08/2021-10-30-raspios-bullseye-arm64-lite.zip"
+  type = map(string)
+
+  validation {
+    condition     = lookup(var.raspios_url, "armhf", "") != ""
+    error_message = "URL for armhf should be specified."
+  }
+  validation {
+    condition     = lookup(var.raspios_url, "arm64", "") != ""
+    error_message = "URL for arm64 should be specified."
   }
 }
 
 variable "raspios_checksum" {
-  type    = map(string)
-  default = {
-    armhf = "008d7377b8c8b853a6663448a3f7688ba98e2805949127a1d9e8859ff96ee1a9"
-    arm64 = "c88109027eac44b9ff37a7f3eb1873cdf6d7ca61a0264ec0e95870ca96afd242"
+  type = map(string)
+
+  validation {
+    condition     = lookup(var.raspios_checksum, "armhf", "") != ""
+    error_message = "SHA256 for armhf should be specified."
+  }
+  validation {
+    condition     = lookup(var.raspios_checksum, "arm64", "") != ""
+    error_message = "SHA256 for arm64 should be specified."
   }
 }
 

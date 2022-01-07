@@ -1,25 +1,66 @@
 ---
-name: Try to build new version of RaspiOS each month
+name: Periodic build from upstream
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: 0 12 1 * *
 
 jobs:
-  build_images:
+  check_armhf:
     runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.check.outputs.url }}
+      sha256: ${{ steps.check.outputs.sha256 }}
     steps:
-      - name: Build armhf image
-        uses: benc-uk/workflow-dispatch@v1
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Get latest RaspiOS release
+        id: check
+        uses: ./.github/actions/check_upstream
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          workflow: 17452665
-          inputs: '{"arch":"armhf"}'
+          arch: armhf
 
-      - name: Build arm64 image
-        uses: benc-uk/workflow-dispatch@v1
+  check_arm64:
+    runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.check.outputs.url }}
+      sha256: ${{ steps.check.outputs.sha256 }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Get latest RaspiOS release
+        id: check
+        uses: ./.github/actions/check_upstream
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          workflow: 17452665
-          inputs: '{"arch":"arm64"}'
+          arch: arm64
 
+  update_vars:
+    runs-on: ubuntu-latest
+    needs:
+      - check_armhf
+      - check_arm64
+    outputs:
+      updated: ${{ steps.update.outputs.committed }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Generate vars file
+        run: |
+          cat > rpi-cloudinit-image.auto.pkrvars.hcl <<EOF
+          raspios_url = {
+            armhf = "${{ jobs.check_armhf.outputs.url }}"
+            arm64 = "${{ jobs.check_arm64.outputs.url }}"
+          }
+          raspios_checksum = {
+            armhf = "${{ jobs.check_armhf.outputs.sha256 }}"
+            arm64 = "${{ jobs.check_arm64.outputs.sha256 }}"
+          }
+          EOF
+
+      - name: Update vars file
+        id: update
+        uses: EndBug/add-and-commit@v7.5.0
+        with:
+          default_author: github_actions

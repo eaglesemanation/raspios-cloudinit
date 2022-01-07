@@ -1,0 +1,49 @@
+---
+name: Check upstream RaspiOS version
+description: Parses 'downloads.rapberrypi.org' to find latest release of RaspiOS Lite
+
+inputs:
+  arch:
+    description: CPU Architecture
+    required: true
+
+outputs:
+  url: 
+    description: URL to zip file with RaspiOS release
+    value: ${{ steps.url.outputs.url }}
+  sha256: 
+    description: SHA256 checksum of the zip
+    value: ${{ steps.sha256.outputs.sha256 }}
+
+runs:
+  using: composite
+  steps:
+    - name: Fetch latest build
+      id: release_date
+      shell: bash
+      run: |
+        curl "https://downloads.raspberrypi.org/raspios_lite_${{ inputs.arch }}/images/" 2>/dev/null | \
+        grep -Po "href=\"raspios_lite_${{ inputs.arch }}-\K.*(?=/\")" | \
+        sort -r | head -1 | \
+        xargs printf '::set-output name=release_date::%s\n'
+
+    - name: Fetch url for latest build
+      id: url
+      env:
+        RELEASE_DATE: ${{ steps.release_date.outputs.release_date }}
+      shell: bash
+      run: |
+        export URL_PREFIX="https://downloads.raspberrypi.org/raspios_lite_${{ inputs.arch }}/images/raspios_lite_${{ inputs.arch }}-$RELEASE_DATE/";
+        curl "$URL_PREFIX" 2>/dev/null | \
+        grep -Po "href=\"\K.*-raspios-.*-${{ inputs.arch }}-lite.zip(?=\")" | \
+        xargs printf "::set-output name=url::$URL_PREFIX%s\n"
+
+    - name: Fetch SHA256 checksum for current build
+      id: sha256
+      env:
+        RELEASE_DATE: ${{ steps.release_date.outputs.release_date }}
+        URL: ${{ steps.url.outputs.url }}
+      shell: bash
+      run: |
+        curl "$URL.sha256" 2>/dev/null | \
+        cut -d' ' -f1 | xargs printf '::set-output name=sha256::%s\n'
