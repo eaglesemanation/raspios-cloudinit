@@ -1,0 +1,53 @@
+---
+name: Build RaspiOS image
+description: Builds an image with specified architecrute and uploads it as an artifact
+
+inputs:
+  arch:
+    description: CPU Architecture
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Add Hashicorp Repo
+      shell: bash
+      run: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
+    - name: Add Ansible PPA
+      shell: bash
+      run: |
+        sudo add-apt-repository --yes --update ppa:ansible/ansible
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y packer ansible
+
+    - name: Build RaspiOS Image
+      shell: bash
+      run: |
+        sudo packer init .
+        sudo packer build -var 'arch=${{ inputs.arch }}' .
+
+    - name: Compress image
+      shell: bash
+      run: |
+        sudo mv 'output-raspios-cloudinit/image' 'raspios-cloudinit-${{ inputs.arch }}.img'
+        7z a 'raspios-cloudinit-${{ inputs.arch }}.zip' 'raspios-cloudinit-${{ inputs.arch }}.img'
+
+    - name: Create SHA256 checksum
+      shell: bash
+      run: sha256sum 'raspios-cloudinit-${{ inputs.arch }}.zip' > 'raspios-cloudinit-${{ inputs.arch }}.zip.sha256' 
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ inputs.arch }}
+        path: |
+          raspios-cloudinit-${{ inputs.arch }}.zip
+          raspios-cloudinit-${{ inputs.arch }}.zip.sha256
+        if-no-files-found: error

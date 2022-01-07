@@ -1,47 +1,21 @@
 ---
-name: Build modified RaspiOS image
+name: Build modified RaspiOS images
 
 on:
   workflow_dispatch:
-    inputs:
-      arch:
-        description: CPU Architecture
-        required: true
-        type: choice
-        default: armhf
-        options:
-          - armhf
-          - arm64
 
 jobs:
   build_image:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [armhf, arm64]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Add Hashicorp Repo
-        run: |
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-
-      - name: Add Ansible PPA
-        run: |
-          sudo add-apt-repository --yes --update ppa:ansible/ansible
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y packer ansible
-
-      - name: Build RaspiOS Image
-        run: |
-          sudo packer init .
-          sudo packer build -var 'arch=${{ github.event.inputs.arch }}' .
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+      - name: Build image
+        uses: ./.github/actions/build_image
         with:
-          name: raspios-cloudinit-${{ github.event.inputs.arch }}.img
-          path: output-raspios-cloudinit/image
-          if-no-files-found: error
+          arch: ${{ matrix.arch }}
