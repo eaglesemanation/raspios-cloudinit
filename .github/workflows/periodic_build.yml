@@ -10,7 +10,7 @@ on:
         default: 'false'
         description: Force release
   schedule:
-    - cron: 0 12 1 * *
+    - cron: 0 12 * * 1
 
 jobs:
   check_upstream:
