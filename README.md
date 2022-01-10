@@ -15,9 +15,12 @@ Netplan included for first-boot provisioning
 It should be simular to `/dev/sda` and have `usb` transfer type.
 
 1. **CAREFUL!** (this step can overwrite data on any device)
-Run `dd if={Extracted .img file} of={Path from previous step} conv=fsync bs=8M status=progress` replacing parts of command in curly braces.
+```bash
+sudo dd if={Extracted .img file} of={Path from previous step} conv=fsync bs=8M status=progress
+```
 
-1. (Optional) Run `cmp -n $(stat -c '%s' {.img file}) {.img file} {path to sd card}` to verify that image was written successfully.
+1. Open `boot` partition on SD card and edit `network-config` and `user-data` for first boot setup. 
+Syntax for `user-data` is documented at [cloudinit.readthedocs.io](https://cloudinit.readthedocs.io) and for `network-config` at [netplan.io](https://netplan.io/reference)
 
 ## Building from scratch
 
