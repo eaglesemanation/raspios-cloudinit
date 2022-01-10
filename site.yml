@@ -4,6 +4,6 @@
 
   roles:
     - common
-    - rpi_wifi
+    - rpi_tweaks
     - netplan
     - cloud-init
